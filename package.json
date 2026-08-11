@@ -30,11 +30,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/malekandrew/SHPD.git"
+    "url": "git+https://github.com/malekandrew/abzmyan.git"
   },
-  "homepage": "https://github.com/malekandrew/SHPD#readme",
+  "homepage": "https://github.com/malekandrew/abzmyan#readme",
   "bugs": {
-    "url": "https://github.com/malekandrew/SHPD/issues"
+    "url": "https://github.com/malekandrew/abzmyan/issues"
   },
   "dependencies": {
     "prompts": "^2.4.2",
