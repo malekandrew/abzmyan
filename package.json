@@ -1,0 +1,43 @@
+{
+  "name": "abzmyan",
+  "version": "0.1.0",
+  "description": "abzmyan (Agent Built, Zero Missteps, Yours to Approve, Next.) — a lightweight, index-driven spec-driven-development workflow for Claude Code. Five manually-triggered agents (Scribe, Architect, Builder, Archivist, Shipper) keep a maintained index of your project's architecture, domain model, and history as the single source of truth.",
+  "type": "module",
+  "bin": {
+    "abzmyan": "bin/abzmyan.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "templates",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "echo \"no automated tests\" && exit 0"
+  },
+  "keywords": [
+    "claude-code",
+    "spec-driven-development",
+    "sdd",
+    "cli",
+    "agents",
+    "abzmyan"
+  ],
+  "author": "Andrew Malek",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/malekandrew/SHPD.git"
+  },
+  "homepage": "https://github.com/malekandrew/SHPD#readme",
+  "bugs": {
+    "url": "https://github.com/malekandrew/SHPD/issues"
+  },
+  "dependencies": {
+    "prompts": "^2.4.2",
+    "fs-extra": "^11.2.0"
+  }
+}
