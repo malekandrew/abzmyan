@@ -1,3 +1,10 @@
+## [0.1.6](https://github.com/malekandrew/abzmyan/compare/v0.1.5...v0.1.6) (2026-08-13)
+
+
+### Bug Fixes
+
+* strip only the poisoned _authToken line, keep registry-url ([#4](https://github.com/malekandrew/abzmyan/issues/4)) ([5a9d866](https://github.com/malekandrew/abzmyan/commit/5a9d8662e7f04899acebf56f6cb075997424bfc7)), closes [actions/setup-node#1551](https://github.com/actions/setup-node/issues/1551)
+
 ## [0.1.5](https://github.com/malekandrew/abzmyan/compare/v0.1.4...v0.1.5) (2026-08-13)
 
 
