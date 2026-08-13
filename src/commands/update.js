@@ -1,6 +1,30 @@
 import fs from 'fs-extra';
-import path from 'node:path';
-import { abzmyanDir, commandsDir, TEMPLATES_DIR } from '../scaffold.js';
+import prompts from 'prompts';
+import { AGENTS } from '../agents.js';
+import {
+  abzmyanDir,
+  copyCommandTemplates,
+  readAgentsFromConfig,
+  writeAgentsToConfig,
+} from '../scaffold.js';
+
+function printSummary(summary) {
+  const byAgent = new Map();
+  for (const entry of summary) {
+    if (!byAgent.has(entry.agentId)) byAgent.set(entry.agentId, []);
+    byAgent.get(entry.agentId).push(entry);
+  }
+
+  for (const [agentId, entries] of byAgent) {
+    const label = AGENTS.find((a) => a.id === agentId)?.label ?? agentId;
+    console.log(`\n${label}:`);
+    for (const { name, file, change } of entries) {
+      const marker = change === 'added' ? '+' : change === 'updated' ? '~' : ' ';
+      const display = file.includes(name) ? file : `${name}/${file}`;
+      console.log(`  ${marker} ${display} (${change})`);
+    }
+  }
+}
 
 export async function updateCommand() {
   const projectRoot = process.cwd();
@@ -11,36 +35,54 @@ export async function updateCommand() {
     return;
   }
 
-  const srcDir = path.join(TEMPLATES_DIR, 'commands');
-  const destDir = commandsDir(projectRoot);
-  await fs.ensureDir(destDir);
+  const currentAgentIds = await readAgentsFromConfig(projectRoot);
 
-  const files = (await fs.readdir(srcDir)).filter((f) => f.endsWith('.md'));
-  const summary = [];
-
-  for (const file of files) {
-    const srcPath = path.join(srcDir, file);
-    const destPath = path.join(destDir, file);
-
-    const existed = await fs.pathExists(destPath);
-    const newContent = await fs.readFile(srcPath, 'utf8');
-    const oldContent = existed ? await fs.readFile(destPath, 'utf8') : null;
-
-    if (!existed) {
-      summary.push({ file, change: 'added' });
-    } else if (oldContent !== newContent) {
-      summary.push({ file, change: 'updated' });
-    } else {
-      summary.push({ file, change: 'unchanged' });
-    }
-
-    await fs.copy(srcPath, destPath);
-  }
-
-  console.log('abzmyan command templates refreshed:\n');
-  for (const { file, change } of summary) {
-    const marker = change === 'added' ? '+' : change === 'updated' ? '~' : ' ';
-    console.log(`  ${marker} ${file} (${change})`);
-  }
+  const summary = await copyCommandTemplates(projectRoot, currentAgentIds);
+  console.log('abzmyan command templates refreshed:');
+  printSummary(summary);
   console.log('\n.abzmyan/config.yml, .abzmyan/index/*, and .abzmyan/tickets/* were left untouched.');
+
+  const { agentIds: newAgentIds } = await prompts(
+    {
+      type: 'multiselect',
+      name: 'agentIds',
+      message: 'Add or change AI agents for this project?',
+      choices: AGENTS.map((agent) => ({
+        title: agent.label,
+        value: agent.id,
+        selected: currentAgentIds.includes(agent.id),
+      })),
+      min: 1,
+      instructions: false,
+    },
+    {
+      onCancel: () => {
+        console.log('\nAgent selection unchanged.');
+      },
+    }
+  );
+
+  if (!newAgentIds) {
+    return;
+  }
+
+  const sameSet =
+    newAgentIds.length === currentAgentIds.length &&
+    newAgentIds.every((id) => currentAgentIds.includes(id));
+
+  if (sameSet) {
+    console.log('\nAgent selection unchanged.');
+    return;
+  }
+
+  const addedAgentIds = newAgentIds.filter((id) => !currentAgentIds.includes(id));
+
+  if (addedAgentIds.length > 0) {
+    const addedSummary = await copyCommandTemplates(projectRoot, addedAgentIds);
+    console.log('\nNew agent command files written:');
+    printSummary(addedSummary);
+  }
+
+  await writeAgentsToConfig(projectRoot, newAgentIds);
+  console.log(`\n.abzmyan/config.yml updated. Configured agents: ${newAgentIds.join(', ')}.`);
 }

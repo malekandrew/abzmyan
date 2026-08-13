@@ -1,7 +1,7 @@
 {
   "name": "abzmyan",
   "version": "0.1.9",
-  "description": "abzmyan (Agent Built, Zero Missteps, Yours to Approve, Next.) — a lightweight, index-driven spec-driven-development workflow for Claude Code. Five manually-triggered agents (Scribe, Architect, Builder, Archivist, Shipper) keep a maintained index of your project's architecture, domain model, and history as the single source of truth.",
+  "description": "abzmyan (Agent Built, Zero Missteps, Yours to Approve, Next.) — a lightweight, index-driven spec-driven-development workflow for Claude Code, Cursor, GitHub Copilot, OpenAI Codex CLI, and Gemini CLI. Five manually-triggered agents (Scribe, Architect, Builder, Archivist, Shipper) keep a maintained index of your project's architecture, domain model, and history as the single source of truth.",
   "type": "module",
   "bin": {
     "abzmyan": "bin/abzmyan.js"
@@ -20,6 +20,10 @@
   },
   "keywords": [
     "claude-code",
+    "cursor",
+    "github-copilot",
+    "codex-cli",
+    "gemini-cli",
     "spec-driven-development",
     "sdd",
     "cli",
@@ -38,7 +42,8 @@
   },
   "dependencies": {
     "fs-extra": "^11.2.0",
-    "prompts": "^2.4.2"
+    "prompts": "^2.4.2",
+    "yaml": "^2.5.1"
   },
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.3",

@@ -2,9 +2,9 @@
 
 [![npm version](https://img.shields.io/npm/v/abzmyan.svg)](https://www.npmjs.com/package/abzmyan)
 
-**abzmyan** — Agent Built, Zero Missteps, Yours to Approve, Next. — is a lightweight, spec-driven-development workflow for [Claude Code](https://claude.com/claude-code), built around one core idea: **a maintained set of index docs (the "index") is the single source of truth for a project's architecture, domain model, API surface, and history.**
+**abzmyan** — Agent Built, Zero Missteps, Yours to Approve, Next. — is a lightweight, spec-driven-development workflow for your AI coding agent(s) of choice — [Claude Code](https://claude.com/claude-code), [Cursor](https://cursor.com), [GitHub Copilot](https://github.com/features/copilot), [OpenAI Codex CLI](https://github.com/openai/codex), and [Gemini CLI](https://github.com/google-gemini/gemini-cli) — built around one core idea: **a maintained set of index docs (the "index") is the single source of truth for a project's architecture, domain model, API surface, and history.**
 
-It's a 5-agent workflow, distributed as an npx-installable CLI. Each agent is triggered manually, one at a time, in a separate/clean Claude Code chat thread — there is no autonomous end-to-end flow, and no auto-chaining between stages. You review the output of each stage before moving to the next.
+It's a 5-agent workflow, distributed as an npx-installable CLI. Each agent is triggered manually, one at a time, in a separate/clean chat thread in your AI coding agent of choice — there is no autonomous end-to-end flow, and no auto-chaining between stages. You review the output of each stage before moving to the next.
 
 Built for personal, single-developer projects. No team collaboration, permissions, or concurrent-editing support. No automated testing/QA step and no deployment rollback — both are intentionally out of scope for now.
 
@@ -16,19 +16,27 @@ Inside the root of a project you want to use abzmyan on:
 npx abzmyan init
 ```
 
-This will ask you a few questions (project code, greenfield vs. brownfield, deploy method) and scaffold:
+This will ask you a few questions — project code, greenfield vs. brownfield, deploy method, and which AI coding agent(s) you use (multi-select: Claude Code, Cursor, GitHub Copilot, OpenAI Codex CLI, Gemini CLI — pick one or more) — and scaffold:
 
 ```
 .abzmyan/
-  config.yml
+  config.yml              ← records your selected agent(s) under `agents:`
   index/                 ← architecture.md, domain-model.md, api-index.md, tech-stack.md, flow-diagrams.md, history.md
   tickets/
     tickets.json
-.claude/
-  commands/               ← the 6 slash commands below
 ```
 
-If you're adding abzmyan to an existing (brownfield) codebase, run `/abzmyan-bootstrap` inside Claude Code right after `init` to have an agent draft your index docs from a scan of the existing code. Review its output before trusting it.
+Plus, for each AI agent you selected, its native commands directory with the 6 commands below:
+
+| Agent | Commands directory |
+|---|---|
+| Claude Code | `.claude/commands/*.md` |
+| Cursor | `.cursor/commands/*.md` |
+| GitHub Copilot | `.github/agents/*.agent.md` |
+| OpenAI Codex CLI | `.codex/skills/<name>/SKILL.md` |
+| Gemini CLI | `.gemini/commands/*.toml` |
+
+If you're adding abzmyan to an existing (brownfield) codebase, run `/abzmyan-bootstrap` (or the equivalent invocation for your agent) right after `init` to have an agent draft your index docs from a scan of the existing code. Review its output before trusting it.
 
 To pull in updates to the agent command files later (without touching your config, index docs, or tickets), run:
 
@@ -36,9 +44,11 @@ To pull in updates to the agent command files later (without touching your confi
 npx abzmyan update
 ```
 
+`update` also refreshes command files for every AI agent currently configured for the project, and offers a prompt to add or change which agent(s) abzmyan writes commands for.
+
 ## The workflow
 
-Five agents, each a Claude Code slash command, each doing exactly one job and then stopping for human review:
+Five agents, each invoked via your AI agent's native custom-command mechanism (e.g. a Claude Code/Cursor/Gemini CLI slash command, or a GitHub Copilot custom agent selected from the chat mode dropdown), each doing exactly one job and then stopping for human review:
 
 | Agent | Command | Does | Sets status to |
 |---|---|---|---|
@@ -99,7 +109,7 @@ Deliberately not built (see the spec for the full rationale):
 - No deployment rollback, backups, or versioning
 - No multi-user / concurrent-access handling
 - No deploy method other than FTP for now
-- No web UI or dashboard — this is CLI + markdown files + Claude Code slash commands only
+- No web UI or dashboard — this is CLI + markdown files + your AI coding agent's native commands only
 - No agent auto-chains into the next one; every stage waits for a human to trigger the next command
 
 ## License

@@ -2,6 +2,7 @@ import fs from 'fs-extra';
 import path from 'node:path';
 import prompts from 'prompts';
 import { detectDefaultMode } from '../detect.js';
+import { AGENTS } from '../agents.js';
 import {
   abzmyanDir,
   copyIndexTemplates,
@@ -69,6 +70,14 @@ export async function initCommand() {
         initial: '.env.deploy',
       },
       {
+        type: 'multiselect',
+        name: 'agentIds',
+        message: 'Which AI coding agent(s) do you want to use abzmyan with?',
+        choices: AGENTS.map((agent) => ({ title: agent.label, value: agent.id })),
+        min: 1,
+        instructions: false,
+      },
+      {
         type: 'confirm',
         name: 'confirmDir',
         message: `Initialize abzmyan in ${projectRoot}?`,
@@ -99,13 +108,14 @@ export async function initCommand() {
     createdAt,
     deployMethod: answers.deployMethod,
     credentialsFile: answers.credentialsFile,
+    agentIds: answers.agentIds,
     abzmyanVersion: PACKAGE_VERSION,
   });
-  await copyCommandTemplates(projectRoot);
+  await copyCommandTemplates(projectRoot, answers.agentIds);
 
   await appendHistoryLine(
     projectRoot,
-    `[${createdAt}] abzmyan initialized. Mode: ${answers.mode}. Project code: ${answers.projectCode}.`
+    `[${createdAt}] abzmyan initialized. Mode: ${answers.mode}. Project code: ${answers.projectCode}. Agents: ${answers.agentIds.join(', ')}.`
   );
 
   if (answers.mode === 'brownfield') {

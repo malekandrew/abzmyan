@@ -3,4 +3,6 @@ mode: {{MODE}}
 created_at: {{CREATED_AT}}
 deploy:
 {{DEPLOY_BLOCK}}
+agents:
+{{AGENTS_BLOCK}}
 abzmyan_version: {{ABZMYAN_VERSION}}
