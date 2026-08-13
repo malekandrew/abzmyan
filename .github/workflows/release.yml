@@ -18,7 +18,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      # npm's OIDC trusted publishing requires actions/setup-node v6+
+      # (v4/v5 don't support it) plus npm CLI >= 11.5.1 and Node >= 22.14.0.
+      - uses: actions/setup-node@v6
         with:
           node-version: 'lts/*'
           registry-url: 'https://registry.npmjs.org'
@@ -27,17 +29,7 @@ jobs:
 
       - run: npm test
 
-      # OIDC trusted publishing requires npm CLI >= 11.5.1.
       - run: npm install -g npm@latest --force
-
-      # registry-url unconditionally writes an _authToken=${NODE_AUTH_TOKEN}
-      # line to .npmrc even when NODE_AUTH_TOKEN is unset. npm sees that and
-      # assumes auth is already configured, so it skips the OIDC
-      # trusted-publish exchange. Strip just that line -- the rest of the
-      # registry config (which OIDC detection relies on) stays intact.
-      - run: |
-          npmrc="${NPM_CONFIG_USERCONFIG:-$HOME/.npmrc}"
-          sed -i '/_authToken/d' "$npmrc"
 
       - run: npx semantic-release
         env:
