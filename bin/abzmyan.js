@@ -29,7 +29,7 @@ function printHelp() {
 
 Usage:
   npx abzmyan init      Scaffold abzmyan into the current project
-  npx abzmyan update    Refresh agent command templates (.claude/commands/*)
+  npx abzmyan update    Refresh agent command templates for your configured AI agent(s)
 
 Docs: see README.md in the abzmyan package.`);
 }
