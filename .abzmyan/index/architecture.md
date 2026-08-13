@@ -1,0 +1,23 @@
+# Architecture
+
+> Maintained by: Archivist agent (after each ticket) and Bootstrapper (initial draft for brownfield projects).
+> This file describes the CURRENT state of the system, not history. Edit in place; do not append.
+
+## Overview
+abzmyan is a small Node.js CLI tool (npx-installable, package name `abzmyan`) that scaffolds and maintains a lightweight, index-driven spec-driven-development workflow for Claude Code. It has no server, database, or runtime service component — it is purely a one-shot code generator/updater that writes files into whatever project directory it's run in (`.abzmyan/` and `.claude/commands/`), plus a set of Markdown "agent" prompts consumed by Claude Code as slash commands. The actual 5-agent workflow (Scribe/Architect/Builder/Archivist/Shipper) executes inside Claude Code, driven by those Markdown prompt files, not by any code in this repo.
+
+## Components
+- **`bin/abzmyan.js`** — CLI entrypoint. Parses `process.argv` for `init` / `update` / help, dispatches to the corresponding command module, and prints usage.
+- **`src/commands/init.js`** — Interactive `npx abzmyan init` flow. Uses `prompts` to ask for project code, greenfield/brownfield mode, and deploy method (FTP or unconfigured). Guards against re-initializing an already-scaffolded project. Writes `.abzmyan/config.yml`, copies index templates, writes an empty tickets registry, copies command templates into `.claude/commands/`, and appends the first `history.md` entry.
+- **`src/commands/update.js`** — `npx abzmyan update` flow. Re-copies `templates/commands/*.md` into `.claude/commands/`, reporting added/updated/unchanged per file. Explicitly leaves `.abzmyan/config.yml`, `.abzmyan/index/*`, and `.abzmyan/tickets/*` untouched, so it's safe to run repeatedly to pick up new agent prompt versions.
+- **`src/detect.js`** — `detectDefaultMode()`: a heuristic that recursively counts non-ignored files (up to depth 3, ignoring `.git`, `node_modules`, `README.md`, `.DS_Store`) in the target directory to pre-select "brownfield" vs "greenfield" in the init prompt. It never decides silently — the CLI always asks the user; this only sets the default answer.
+- **`src/scaffold.js`** — Shared filesystem helpers: path builders (`abzmyanDir`, `commandsDir`, `indexDir`, `ticketsDir`), template copy functions (`copyIndexTemplates`, `copyCommandTemplates`), config rendering (`writeConfig`, string-replacing `{{PLACEHOLDER}}` tokens in `templates/config.yml.template`), `writeTicketsRegistry`, and `appendHistoryLine` (append-only, blank-line-separated).
+- **`templates/`** — The literal payload the CLI scaffolds into consumer projects: `templates/commands/*.md` (the six agent prompts: abzmyan-bootstrap, architect, archivist, builder, scribe, shipper), `templates/index/*.md` (empty/placeholder index docs with maintainer-note headers), `templates/config.yml.template`, and `templates/tickets.json.template` (`{"tickets": []}`).
+- **`.github/workflows/publish.yml`** — GitHub Actions workflow that publishes to npm (with provenance) on GitHub Release creation or manual dispatch.
+
+## Key design decisions
+- **Index docs as single source of truth.** Rather than agents re-deriving architecture/domain knowledge from the codebase on every run, a maintained set of Markdown docs (`architecture.md`, `tech-stack.md`, `domain-model.md`, `api-index.md`, `flow-diagrams.md`, `history.md`) under `.abzmyan/index/` is kept current by the Archivist agent after every ticket, and by this Bootstrapper for existing (brownfield) codebases.
+- **No orchestration/auto-chaining, by design.** Each of the 5 workflow agents is a separate manually-triggered Claude Code slash command that does one job and stops; there is no code in this repo that invokes Claude or chains agents together — that responsibility lives entirely in the Markdown prompts and the human running them.
+- **Status lifecycle enforced by convention, not code.** Ticket status transitions (`draft → ready → planned → implemented → documented → shipped`) are tracked in a plain `tickets.json` file and enforced by each agent's own precondition check written into its prompt — there's no schema validation or state machine in the JS source.
+- **`update` is non-destructive to user data.** Splitting `init` (one-time scaffold, refuses to run twice) from `update` (repeatable, command-templates-only refresh) lets users pull in new/fixed agent prompts without risking their in-progress tickets or index docs.
+- **Template rendering via simple string replacement**, not a templating engine — `writeConfig` does literal `.replace()` calls on `{{PLACEHOLDER}}` tokens, reflecting the project's low-dependency footprint (`prompts`, `fs-extra`, both only devDependency-adjacent utility libs).
