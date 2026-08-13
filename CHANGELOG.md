@@ -1,3 +1,10 @@
+# [0.2.0](https://github.com/malekandrew/abzmyan/compare/v0.1.9...v0.2.0) (2026-08-13)
+
+
+### Features
+
+* support multiple AI coding agents in abzmyan ([#10](https://github.com/malekandrew/abzmyan/issues/10)) ([8b87858](https://github.com/malekandrew/abzmyan/commit/8b87858110db46dead49dd20689f6a306bcf791e))
+
 ## [0.1.9](https://github.com/malekandrew/abzmyan/compare/v0.1.8...v0.1.9) (2026-08-13)
 
 
