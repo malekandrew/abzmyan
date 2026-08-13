@@ -23,6 +23,8 @@ jobs:
 
       - run: npm test
 
+      # Trusted Publishing (OIDC) requires npm CLI >= 11.5.1; setup-node's
+      # bundled npm on node 20 is older.
+      - run: npm install -g npm@latest
+
       - run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
