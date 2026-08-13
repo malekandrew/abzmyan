@@ -1,6 +1,6 @@
 {
   "name": "abzmyan",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "abzmyan (Agent Built, Zero Missteps, Yours to Approve, Next.) — a lightweight, index-driven spec-driven-development workflow for Claude Code. Five manually-triggered agents (Scribe, Architect, Builder, Archivist, Shipper) keep a maintained index of your project's architecture, domain model, and history as the single source of truth.",
   "type": "module",
   "bin": {
