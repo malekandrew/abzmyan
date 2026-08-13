@@ -31,6 +31,26 @@ jobs:
 
       - run: npm install -g npm@latest --force
 
-      - run: npx semantic-release
+      # registry-url unconditionally writes an _authToken=${NODE_AUTH_TOKEN}
+      # line to .npmrc even when NODE_AUTH_TOKEN is unset. npm treats that
+      # as "auth is configured" and skips the OIDC trusted-publish exchange
+      # entirely, publishing anonymously instead (registry then reports a
+      # misleading 404 rather than a real auth error).
+      - run: |
+          npmrc="${NPM_CONFIG_USERCONFIG:-$HOME/.npmrc}"
+          sed -i '/_authToken/d' "$npmrc"
+          echo "--- .npmrc after strip ---"
+          cat "$npmrc"
+
+      - name: Diagnose OIDC environment
+        run: |
+          echo "npm version: $(npm --version)"
+          echo "node version: $(node --version)"
+          echo "ACTIONS_ID_TOKEN_REQUEST_URL set: $([ -n "$ACTIONS_ID_TOKEN_REQUEST_URL" ] && echo yes || echo no)"
+          echo "ACTIONS_ID_TOKEN_REQUEST_TOKEN set: $([ -n "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" ] && echo yes || echo no)"
+          npm config get registry
+
+      - run: npx semantic-release --debug
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_LOGLEVEL: verbose
