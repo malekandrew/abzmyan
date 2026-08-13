@@ -4,10 +4,12 @@
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
     "@semantic-release/changelog",
-    ["@semantic-release/npm", { "npmPublish": false }],
     [
       "@semantic-release/exec",
-      { "publishCmd": "npm publish --provenance --access public" }
+      {
+        "prepareCmd": "\"$GLOBAL_NPM\" version ${nextRelease.version} --no-git-tag-version --allow-same-version",
+        "publishCmd": "\"$GLOBAL_NPM\" publish --provenance --access public"
+      }
     ],
     [
       "@semantic-release/git",
