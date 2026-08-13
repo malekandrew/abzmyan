@@ -1,3 +1,10 @@
+## [0.1.8](https://github.com/malekandrew/abzmyan/compare/v0.1.7...v0.1.8) (2026-08-13)
+
+
+### Bug Fixes
+
+* restore _authToken strip and add OIDC diagnostics ([#6](https://github.com/malekandrew/abzmyan/issues/6)) ([dd68195](https://github.com/malekandrew/abzmyan/commit/dd68195f92f9a15fdcc04bbd1d66b3d26ec8fee8))
+
 ## [0.1.7](https://github.com/malekandrew/abzmyan/compare/v0.1.6...v0.1.7) (2026-08-13)
 
 
