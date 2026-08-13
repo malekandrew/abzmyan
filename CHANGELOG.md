@@ -1,3 +1,10 @@
+## [0.1.7](https://github.com/malekandrew/abzmyan/compare/v0.1.6...v0.1.7) (2026-08-13)
+
+
+### Bug Fixes
+
+* use actions/setup-node@v6 for npm trusted publishing support ([#5](https://github.com/malekandrew/abzmyan/issues/5)) ([ba36fda](https://github.com/malekandrew/abzmyan/commit/ba36fda209a3c3e64916f485a0713b42c93c5537))
+
 ## [0.1.6](https://github.com/malekandrew/abzmyan/compare/v0.1.5...v0.1.6) (2026-08-13)
 
 
