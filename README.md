@@ -1,5 +1,7 @@
 # abzmyan
 
+[![npm version](https://img.shields.io/npm/v/abzmyan.svg)](https://www.npmjs.com/package/abzmyan)
+
 **abzmyan** — Agent Built, Zero Missteps, Yours to Approve, Next. — is a lightweight, spec-driven-development workflow for [Claude Code](https://claude.com/claude-code), built around one core idea: **a maintained set of index docs (the "index") is the single source of truth for a project's architecture, domain model, API surface, and history.**
 
 It's a 5-agent workflow, distributed as an npx-installable CLI. Each agent is triggered manually, one at a time, in a separate/clean Claude Code chat thread — there is no autonomous end-to-end flow, and no auto-chaining between stages. You review the output of each stage before moving to the next.
