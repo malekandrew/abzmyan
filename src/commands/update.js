@@ -4,6 +4,7 @@ import { AGENTS } from '../agents.js';
 import {
   abzmyanDir,
   copyCommandTemplates,
+  writeMemoryFiles,
   readAgentsFromConfig,
   writeAgentsToConfig,
 } from '../scaffold.js';
@@ -26,6 +27,14 @@ function printSummary(summary) {
   }
 }
 
+function printMemorySummary(summary) {
+  for (const { agentId, file, change } of summary) {
+    const label = AGENTS.find((a) => a.id === agentId)?.label ?? agentId;
+    const marker = change === 'added' ? '+' : change === 'updated' ? '~' : ' ';
+    console.log(`  ${marker} ${label}: ${file} (${change})`);
+  }
+}
+
 export async function updateCommand() {
   const projectRoot = process.cwd();
 
@@ -40,6 +49,11 @@ export async function updateCommand() {
   const summary = await copyCommandTemplates(projectRoot, currentAgentIds);
   console.log('abzmyan command templates refreshed:');
   printSummary(summary);
+
+  const memorySummary = await writeMemoryFiles(projectRoot, currentAgentIds);
+  console.log('\nabzmyan project-context block refreshed in agent memory files:');
+  printMemorySummary(memorySummary);
+
   console.log('\n.abzmyan/config.yml, .abzmyan/index/*, and .abzmyan/tickets/* were left untouched.');
 
   const { agentIds: newAgentIds } = await prompts(
@@ -81,6 +95,10 @@ export async function updateCommand() {
     const addedSummary = await copyCommandTemplates(projectRoot, addedAgentIds);
     console.log('\nNew agent command files written:');
     printSummary(addedSummary);
+
+    const addedMemorySummary = await writeMemoryFiles(projectRoot, addedAgentIds);
+    console.log('\nNew agent memory files written:');
+    printMemorySummary(addedMemorySummary);
   }
 
   await writeAgentsToConfig(projectRoot, newAgentIds);

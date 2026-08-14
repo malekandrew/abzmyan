@@ -34,9 +34,26 @@ function renderCodexSkill(name, content) {
   return `---\nname: ${name}\ndescription: ${description}\n---\n\n${content}`;
 }
 
+/** Wraps abzmyan's memory block with Cursor project-rule frontmatter for its dedicated .mdc file. */
+function renderCursorMemoryFile(block) {
+  return `---\ndescription: abzmyan project context (source of truth + ticket workflow)\nalwaysApply: true\n---\n\n${block}\n`;
+}
+
 /** DEFAULT_AGENTS is the fallback selection for projects initialized before agent selection existed. */
 export const DEFAULT_AGENTS = ['claude-code'];
 
+/**
+ * Per-agent config for abzmyan's always-loaded project-context block — the
+ * short note (in .abzmyan/index/ + the ticket workflow) written into
+ * whichever file that agent auto-loads into every session, distinct from the
+ * on-demand commandsDir files above.
+ *
+ * mode: 'inject'  — shared file the user likely already owns (CLAUDE.md,
+ *                    AGENTS.md, ...); abzmyan writes only the marked block,
+ *                    leaving the rest of the file untouched.
+ * mode: 'own'     — dedicated file abzmyan fully owns (Cursor supports many
+ *                    independent rule files, so no injection is needed).
+ */
 export const AGENTS = [
   {
     id: 'claude-code',
@@ -44,6 +61,7 @@ export const AGENTS = [
     commandsDir: ['.claude', 'commands'],
     fileName: (name) => `${name}.md`,
     render: passthrough,
+    memoryFile: { path: ['CLAUDE.md'], mode: 'inject' },
   },
   {
     id: 'cursor',
@@ -51,6 +69,7 @@ export const AGENTS = [
     commandsDir: ['.cursor', 'commands'],
     fileName: (name) => `${name}.md`,
     render: passthrough,
+    memoryFile: { path: ['.cursor', 'rules', 'abzmyan.mdc'], mode: 'own', render: renderCursorMemoryFile },
   },
   {
     id: 'github-copilot',
@@ -58,6 +77,7 @@ export const AGENTS = [
     commandsDir: ['.github', 'agents'],
     fileName: (name) => `${name}.agent.md`,
     render: renderGithubCopilot,
+    memoryFile: { path: ['.github', 'copilot-instructions.md'], mode: 'inject' },
   },
   {
     id: 'codex-cli',
@@ -65,6 +85,7 @@ export const AGENTS = [
     commandsDir: (name) => ['.codex', 'skills', name],
     fileName: () => 'SKILL.md',
     render: renderCodexSkill,
+    memoryFile: { path: ['AGENTS.md'], mode: 'inject' },
   },
   {
     id: 'gemini-cli',
@@ -72,6 +93,7 @@ export const AGENTS = [
     commandsDir: ['.gemini', 'commands'],
     fileName: (name) => `${name}.toml`,
     render: renderGeminiCli,
+    memoryFile: { path: ['GEMINI.md'], mode: 'inject' },
   },
 ];
 

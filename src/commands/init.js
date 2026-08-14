@@ -9,6 +9,7 @@ import {
   copyCommandTemplates,
   writeConfig,
   writeTicketsRegistry,
+  writeMemoryFiles,
   appendHistoryLine,
 } from '../scaffold.js';
 
@@ -112,6 +113,10 @@ export async function initCommand() {
     abzmyanVersion: PACKAGE_VERSION,
   });
   await copyCommandTemplates(projectRoot, answers.agentIds);
+  const memorySummary = await writeMemoryFiles(projectRoot, answers.agentIds);
+  console.log(
+    `Project-context block written to: ${memorySummary.map((m) => m.file).join(', ')}.`
+  );
 
   await appendHistoryLine(
     projectRoot,

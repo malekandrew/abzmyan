@@ -36,6 +36,18 @@ Plus, for each AI agent you selected, its native commands directory with the 6 c
 | OpenAI Codex CLI | `.codex/skills/<name>/SKILL.md` |
 | Gemini CLI | `.gemini/commands/*.toml` |
 
+`init` also writes a short project-context block — pointing to `.abzmyan/index/` as the source of truth and naming the ticket workflow — into each selected agent's always-loaded memory file, so ordinary chat (not just the slash commands) stays aware of it:
+
+| Agent | Memory file | How it's written |
+|---|---|---|
+| Claude Code | `CLAUDE.md` | block inserted between `<!-- abzmyan:start -->`/`<!-- abzmyan:end -->` markers; rest of the file is left alone |
+| Cursor | `.cursor/rules/abzmyan.mdc` | dedicated always-apply rule file, fully owned by abzmyan |
+| GitHub Copilot | `.github/copilot-instructions.md` | marker block, as above |
+| OpenAI Codex CLI | `AGENTS.md` | marker block, as above |
+| Gemini CLI | `GEMINI.md` | marker block, as above |
+
+If the shared file already exists (e.g. you have your own `CLAUDE.md`), only the marked block is touched — your own content is preserved.
+
 If you're adding abzmyan to an existing (brownfield) codebase, run `/abzmyan-bootstrap` (or the equivalent invocation for your agent) right after `init` to have an agent draft your index docs from a scan of the existing code. Review its output before trusting it.
 
 To pull in updates to the agent command files later (without touching your config, index docs, or tickets), run:
@@ -44,7 +56,7 @@ To pull in updates to the agent command files later (without touching your confi
 npx abzmyan update
 ```
 
-`update` also refreshes command files for every AI agent currently configured for the project, and offers a prompt to add or change which agent(s) abzmyan writes commands for.
+`update` also refreshes command files and the project-context block for every AI agent currently configured for the project, and offers a prompt to add or change which agent(s) abzmyan writes commands for. This is how projects set up with an older version of abzmyan (from before this block existed) pick it up — just run `npx abzmyan update`.
 
 ## The workflow
 
