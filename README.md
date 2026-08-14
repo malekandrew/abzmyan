@@ -4,7 +4,7 @@
 
 **abzmyan** — Agent Built, Zero Missteps, Yours to Approve, Next. — is a lightweight, spec-driven-development workflow for your AI coding agent(s) of choice — [Claude Code](https://claude.com/claude-code), [Cursor](https://cursor.com), [GitHub Copilot](https://github.com/features/copilot), [OpenAI Codex CLI](https://github.com/openai/codex), and [Gemini CLI](https://github.com/google-gemini/gemini-cli) — built around one core idea: **a maintained set of index docs (the "index") is the single source of truth for a project's architecture, domain model, API surface, and history.**
 
-It's a 5-agent workflow, distributed as an npx-installable CLI. Each agent is triggered manually, one at a time, in a separate/clean chat thread in your AI coding agent of choice — there is no autonomous end-to-end flow, and no auto-chaining between stages. You review the output of each stage before moving to the next.
+It's a 5-agent workflow, distributed as an npx-installable CLI. By default each agent is triggered manually, one at a time, in a separate/clean chat thread in your AI coding agent of choice, and you review the output of each stage before moving to the next. There's also an optional one-shot mode (`/abzmyan-express`) for small tasks that chains the stages together without stopping — but it's never triggered automatically; see [The workflow](#the-workflow) below.
 
 Built for personal, single-developer projects. No team collaboration, permissions, or concurrent-editing support. No automated testing/QA step and no deployment rollback — both are intentionally out of scope for now.
 
@@ -26,7 +26,7 @@ This will ask you a few questions — project code, greenfield vs. brownfield, d
     tickets.json
 ```
 
-Plus, for each AI agent you selected, its native commands directory with the 6 commands below:
+Plus, for each AI agent you selected, its native commands directory with the 7 commands below:
 
 | Agent | Commands directory |
 |---|---|
@@ -36,7 +36,7 @@ Plus, for each AI agent you selected, its native commands directory with the 6 c
 | OpenAI Codex CLI | `.codex/skills/<name>/SKILL.md` |
 | Gemini CLI | `.gemini/commands/*.toml` |
 
-`init` also writes a short project-context block — pointing to `.abzmyan/index/` as the source of truth and naming the ticket workflow — into each selected agent's always-loaded memory file, so ordinary chat (not just the slash commands) stays aware of it:
+`init` also writes a short project-context block into each selected agent's always-loaded memory file, so ordinary chat (not just the slash commands) knows the index and the ticket workflow exist. It's deliberately passive: your agent won't invoke abzmyan on its own or route small edits/questions through it — it'll only ask, once, when you ask for something that's clearly a real feature/fix/refactor, offering either the standard flow or `/abzmyan-express`.
 
 | Agent | Memory file | How it's written |
 |---|---|---|
@@ -70,9 +70,10 @@ Five agents, each invoked via your AI agent's native custom-command mechanism (e
 | **Archivist** | `/archivist <TICKET-ID>` | Updates the index docs and appends a `history.md` entry | `documented` |
 | **Shipper** | `/shipper <TICKET-ID>` | Deploys the built app (FTP) | `shipped` |
 
-Plus one setup-time agent that isn't part of the per-ticket flow:
+Plus two agents that aren't part of the standard per-ticket flow:
 
 - **Bootstrapper** — `/abzmyan-bootstrap` — one-time (brownfield only) agent that drafts the initial index docs from a scan of your existing codebase.
+- **Express** — `/abzmyan-express "<free text idea>"` — optional, explicitly-triggered one-shot variant of Scribe → Architect → Builder → Archivist for small tasks and quick fixes, run back-to-back with no review gate between stages. You can also ask for it in plain chat (e.g. "just handle this end to end") instead of typing the command — abzmyan's memory-file note tells your agent how to offer it, but it will never start it without you asking. It stops at `documented` and never deploys; `/shipper` is always a separate step. Because Architect/Builder/Archivist run unattended and can't be undone by Express itself, it has exactly one mandatory checkpoint: right after drafting `requirements.md`, it shows you the requirements and won't proceed until you explicitly confirm them.
 
 ### Status lifecycle
 
@@ -80,7 +81,7 @@ Plus one setup-time agent that isn't part of the per-ticket flow:
 draft → ready → planned → implemented → documented → shipped
 ```
 
-- **`draft` → `ready` is a manual, human-only transition.** No agent will ever set a ticket to `ready` on its own. After Scribe writes `requirements.md`, you review it, and only once you're satisfied do you flip the ticket to `ready` (by hand in `tickets.json`, or by telling Scribe to do it in that same session) — that's your explicit "go ahead" signal before any planning or code gets written.
+- **`draft` → `ready` is a manual, human-gated transition.** No agent will ever set a ticket to `ready` without an explicit human go-ahead in that same conversation. In the standard flow that's you reviewing `requirements.md` and flipping the ticket to `ready` yourself (by hand in `tickets.json`, or by telling Scribe to do it in that same session). In Express, it's the mandatory checkpoint above — your explicit confirmation in chat stands in for the manual edit.
 - Every other transition is set automatically by the agent that just finished its job.
 - Each agent checks the ticket's current status before doing anything and refuses to run if the precondition isn't met:
   - Architect requires `ready`
@@ -111,7 +112,15 @@ draft → ready → planned → implemented → documented → shipped
 #   → deploys via FTP, status: shipped
 ```
 
-Nothing here chains automatically — each command does its one job, writes its files, and stops.
+Nothing here chains automatically — each command does its one job, writes its files, and stops. The one exception is the optional `/abzmyan-express` command:
+
+```sh
+/abzmyan-express "Fix the off-by-one in the pagination footer"
+#   → drafts requirements.md, status: draft
+#   → shows you the requirements, waits for your explicit confirmation
+#   → then runs Architect, Builder, Archivist back-to-back, status: documented
+#   → you review the diff, then run /shipper XTG-002 yourself if you want to deploy
+```
 
 ## Notes on scope
 
@@ -122,7 +131,7 @@ Deliberately not built (see the spec for the full rationale):
 - No multi-user / concurrent-access handling
 - No deploy method other than FTP for now
 - No web UI or dashboard — this is CLI + markdown files + your AI coding agent's native commands only
-- No agent auto-chains into the next one; every stage waits for a human to trigger the next command
+- No agent auto-chains into the next one by default; every stage waits for a human to trigger the next command — except the optional, explicitly-triggered `/abzmyan-express` one-shot variant, which still keeps one mandatory human checkpoint before it touches any code
 
 ## License
 
