@@ -144,4 +144,72 @@ export async function appendHistoryLine(projectRoot, line) {
   await fs.writeFile(historyPath, `${existing}\n\n${line}\n`, 'utf8');
 }
 
+const MEMORY_BLOCK_START = '<!-- abzmyan:start -->';
+const MEMORY_BLOCK_END = '<!-- abzmyan:end -->';
+
+/** Injects/refreshes abzmyan's marked block in a shared file the user may also own, leaving everything outside the markers untouched. */
+async function upsertInjectedMemoryFile(destPath, wrappedBlock) {
+  const existed = await fs.pathExists(destPath);
+  const before = existed ? await fs.readFile(destPath, 'utf8') : '';
+
+  let next;
+  if (!existed) {
+    next = `${wrappedBlock}\n`;
+  } else if (before.includes(MEMORY_BLOCK_START) && before.includes(MEMORY_BLOCK_END)) {
+    next = before.replace(
+      new RegExp(`${MEMORY_BLOCK_START}[\\s\\S]*?${MEMORY_BLOCK_END}`),
+      wrappedBlock
+    );
+  } else {
+    next = `${before.replace(/\n+$/, '')}\n\n${wrappedBlock}\n`;
+  }
+
+  const change = !existed ? 'added' : before !== next ? 'updated' : 'unchanged';
+  if (change !== 'unchanged') {
+    await fs.ensureDir(path.dirname(destPath));
+    await fs.writeFile(destPath, next, 'utf8');
+  }
+  return change;
+}
+
+/** Fully (over)writes a dedicated file abzmyan owns outright, e.g. Cursor's project rule file. */
+async function writeOwnedMemoryFile(destPath, content) {
+  const existed = await fs.pathExists(destPath);
+  const before = existed ? await fs.readFile(destPath, 'utf8') : null;
+  const change = !existed ? 'added' : before !== content ? 'updated' : 'unchanged';
+  if (change !== 'unchanged') {
+    await fs.ensureDir(path.dirname(destPath));
+    await fs.writeFile(destPath, content, 'utf8');
+  }
+  return change;
+}
+
+/**
+ * Writes/refreshes abzmyan's always-loaded project-context block (source of
+ * truth pointer + ticket workflow) into each selected agent's ambient memory
+ * file (CLAUDE.md, AGENTS.md, a Cursor rule file, ...), so ordinary chat —
+ * not just the slash commands — stays aware of the index and the ticket
+ * flow. Returns a per-{agentId, file, change} summary like copyCommandTemplates.
+ */
+export async function writeMemoryFiles(projectRoot, agentIds) {
+  const blockTemplatePath = path.join(TEMPLATES_DIR, 'memory-block.md.template');
+  const block = (await fs.readFile(blockTemplatePath, 'utf8')).trim();
+  const wrappedBlock = `${MEMORY_BLOCK_START}\n${block}\n${MEMORY_BLOCK_END}`;
+
+  const summary = [];
+  for (const agentId of agentIds) {
+    const agent = getAgent(agentId);
+    if (!agent.memoryFile) continue;
+
+    const destPath = path.join(projectRoot, ...agent.memoryFile.path);
+    const change =
+      agent.memoryFile.mode === 'own'
+        ? await writeOwnedMemoryFile(destPath, agent.memoryFile.render(wrappedBlock))
+        : await upsertInjectedMemoryFile(destPath, wrappedBlock);
+
+    summary.push({ agentId, file: path.relative(projectRoot, destPath), change });
+  }
+  return summary;
+}
+
 export { AGENTS };

@@ -1,0 +1,5 @@
+## abzmyan
+
+This project uses **abzmyan**, a spec-driven ticket workflow. Read `.abzmyan/index/` (architecture.md, domain-model.md, api-index.md, tech-stack.md, flow-diagrams.md) before making non-trivial changes — it's the maintained source of truth for this project's architecture, domain model, and API surface.
+
+Work is tracked as tickets in `.abzmyan/tickets/`, each moving through `draft → ready → planned → implemented → documented → shipped` via five commands: `/scribe`, `/architect`, `/builder`, `/archivist`, `/shipper`. Stay inside that flow for anything beyond a trivial fix — don't jump straight to editing code or hand-editing the index docs; each step belongs to its own command.
