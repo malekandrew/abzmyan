@@ -8,6 +8,7 @@
 /** One-line description per command, used by agents whose native format wants one. */
 export const COMMAND_DESCRIPTIONS = {
   'abzmyan-bootstrap': 'One-time (brownfield only) agent that drafts the initial index docs from a scan of your existing codebase.',
+  'abzmyan-express': 'Opt-in one-shot variant: runs Scribe, a mandatory confirm checkpoint, then Architect, Builder, and Archivist back-to-back for small tasks. Never deploys.',
   architect: "Turns an approved ticket's requirements into a codebase-grounded plan.",
   archivist: 'Updates the index docs and appends a history.md entry.',
   builder: 'Implements the plan, verifies the build, self-checks acceptance criteria.',
