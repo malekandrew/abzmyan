@@ -1,3 +1,10 @@
+# [0.3.0](https://github.com/malekandrew/abzmyan/compare/v0.2.0...v0.3.0) (2026-08-14)
+
+
+### Features
+
+* implement project-context block for AI agents' memory files ([#11](https://github.com/malekandrew/abzmyan/issues/11)) ([09a1b5a](https://github.com/malekandrew/abzmyan/commit/09a1b5a26478562d5d7ede429b7364c62d286d5c))
+
 # [0.2.0](https://github.com/malekandrew/abzmyan/compare/v0.1.9...v0.2.0) (2026-08-13)
 
 
