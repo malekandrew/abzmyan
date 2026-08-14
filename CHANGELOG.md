@@ -1,3 +1,10 @@
+# [0.4.0](https://github.com/malekandrew/abzmyan/compare/v0.3.0...v0.4.0) (2026-08-14)
+
+
+### Features
+
+* add optional one-shot /abzmyan-express command for streamlined task execution ([#12](https://github.com/malekandrew/abzmyan/issues/12)) ([c795a51](https://github.com/malekandrew/abzmyan/commit/c795a5175eaa6137e485c9e9f5736ccc18595252))
+
 # [0.3.0](https://github.com/malekandrew/abzmyan/compare/v0.2.0...v0.3.0) (2026-08-14)
 
 
