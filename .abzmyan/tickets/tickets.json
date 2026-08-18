@@ -7,6 +7,14 @@
       "status": "implemented",
       "created_at": "2026-08-13T15:48:31.000Z",
       "updated_at": "2026-08-13T20:36:35.000Z"
+    },
+    {
+      "id": "ABZ-002",
+      "slug": "flexible-deployer-agent",
+      "title": "Replace Shipper with a flexible, multi-target Deployer agent and rename `documented` status to `archived`",
+      "status": "archived",
+      "created_at": "2026-08-16T21:49:42.000Z",
+      "updated_at": "2026-08-18T14:59:51.000Z"
     }
   ]
 }

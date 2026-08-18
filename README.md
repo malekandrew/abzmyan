@@ -4,7 +4,7 @@
 
 **abzmyan** — Agent Built, Zero Missteps, Yours to Approve, Next. — is a lightweight, spec-driven-development workflow for your AI coding agent(s) of choice — [Claude Code](https://claude.com/claude-code), [Cursor](https://cursor.com), [GitHub Copilot](https://github.com/features/copilot), [OpenAI Codex CLI](https://github.com/openai/codex), and [Gemini CLI](https://github.com/google-gemini/gemini-cli) — built around one core idea: **a maintained set of index docs (the "index") is the single source of truth for a project's architecture, domain model, API surface, and history.**
 
-It's a 5-agent workflow, distributed as an npx-installable CLI. By default each agent is triggered manually, one at a time, in a separate/clean chat thread in your AI coding agent of choice, and you review the output of each stage before moving to the next. There's also an optional one-shot mode (`/abzmyan-express`) for small tasks that chains the stages together without stopping — but it's never triggered automatically; see [The workflow](#the-workflow) below.
+It's a 4-agent per-ticket workflow, distributed as an npx-installable CLI. By default each agent is triggered manually, one at a time, in a separate/clean chat thread in your AI coding agent of choice, and you review the output of each stage before moving to the next. There's also an optional one-shot mode (`/abzmyan-express`) for small tasks that chains the stages together without stopping, and a flexible, ticket-agnostic Deployer agent for deploying whenever you're ready — batched across tickets rather than once per ticket — neither is ever triggered automatically; see [The workflow](#the-workflow) below.
 
 Built for personal, single-developer projects. No team collaboration, permissions, or concurrent-editing support. No automated testing/QA step and no deployment rollback — both are intentionally out of scope for now.
 
@@ -16,7 +16,7 @@ Inside the root of a project you want to use abzmyan on:
 npx abzmyan init
 ```
 
-This will ask you a few questions — project code, greenfield vs. brownfield, deploy method, and which AI coding agent(s) you use (multi-select: Claude Code, Cursor, GitHub Copilot, OpenAI Codex CLI, Gemini CLI — pick one or more) — and scaffold:
+This will ask you a few questions — project code, greenfield vs. brownfield, and which AI coding agent(s) you use (multi-select: Claude Code, Cursor, GitHub Copilot, OpenAI Codex CLI, Gemini CLI — pick one or more) — and scaffold:
 
 ```
 .abzmyan/
@@ -60,25 +60,25 @@ npx abzmyan update
 
 ## The workflow
 
-Five agents, each invoked via your AI agent's native custom-command mechanism (e.g. a Claude Code/Cursor/Gemini CLI slash command, or a GitHub Copilot custom agent selected from the chat mode dropdown), each doing exactly one job and then stopping for human review:
+Four agents, each invoked via your AI agent's native custom-command mechanism (e.g. a Claude Code/Cursor/Gemini CLI slash command, or a GitHub Copilot custom agent selected from the chat mode dropdown), each doing exactly one job and then stopping for human review:
 
 | Agent | Command | Does | Sets status to |
 |---|---|---|---|
 | **Scribe** | `/scribe "<free text idea>"` | Turns a free-text idea into a new ticket with `requirements.md` | `draft` |
 | **Architect** | `/architect <TICKET-ID>` | Turns approved requirements into a codebase-grounded `plan.md` | `planned` |
 | **Builder** | `/builder <TICKET-ID>` | Implements the plan, verifies the build, self-checks acceptance criteria | `implemented` |
-| **Archivist** | `/archivist <TICKET-ID>` | Updates the index docs and appends a `history.md` entry | `documented` |
-| **Shipper** | `/shipper <TICKET-ID>` | Deploys the built app (FTP) | `shipped` |
+| **Archivist** | `/archivist <TICKET-ID>` | Updates the index docs and appends a `history.md` entry | `archived` |
 
-Plus two agents that aren't part of the standard per-ticket flow:
+Plus three agents that aren't part of the standard per-ticket flow:
 
 - **Bootstrapper** — `/abzmyan-bootstrap` — one-time (brownfield only) agent that drafts the initial index docs from a scan of your existing codebase.
-- **Express** — `/abzmyan-express "<free text idea>"` — optional, explicitly-triggered one-shot variant of Scribe → Architect → Builder → Archivist for small tasks and quick fixes, run back-to-back with no review gate between stages. You can also ask for it in plain chat (e.g. "just handle this end to end") instead of typing the command — abzmyan's memory-file note tells your agent how to offer it, but it will never start it without you asking. It stops at `documented` and never deploys; `/shipper` is always a separate step. Because Architect/Builder/Archivist run unattended and can't be undone by Express itself, it has exactly one mandatory checkpoint: right after drafting `requirements.md`, it shows you the requirements and won't proceed until you explicitly confirm them.
+- **Deployer** — `/deployer [target-name]` — ticket-agnostic; deploys the current state of the project rather than any one ticket, since deploys are typically batched across many tickets. No ticket ID, no status precondition. The first time it runs for a given deploy target, it holds an open-ended interview — not tied to any specific method — to understand how deployment actually works for this project (FTP/SFTP, a webhook, opening a PR against a pipeline repo, a custom script, or anything else), validates access where it safely can without deploying anything, and writes what it learned into a playbook (`.abzmyan/deploy/<target>.md`) that later runs just follow. Supports multiple named targets (e.g. staging/production).
+- **Express** — `/abzmyan-express "<free text idea>"` — optional, explicitly-triggered one-shot variant of Scribe → Architect → Builder → Archivist for small tasks and quick fixes, run back-to-back with no review gate between stages. You can also ask for it in plain chat (e.g. "just handle this end to end") instead of typing the command — abzmyan's memory-file note tells your agent how to offer it, but it will never start it without you asking. It stops at `archived` and never deploys; `/deployer` is always a separate step. Because Architect/Builder/Archivist run unattended and can't be undone by Express itself, it has exactly one mandatory checkpoint: right after drafting `requirements.md`, it shows you the requirements and won't proceed until you explicitly confirm them.
 
 ### Status lifecycle
 
 ```
-draft → ready → planned → implemented → documented → shipped
+draft → ready → planned → implemented → archived
 ```
 
 - **`draft` → `ready` is a manual, human-gated transition.** No agent will ever set a ticket to `ready` without an explicit human go-ahead in that same conversation. In the standard flow that's you reviewing `requirements.md` and flipping the ticket to `ready` yourself (by hand in `tickets.json`, or by telling Scribe to do it in that same session). In Express, it's the mandatory checkpoint above — your explicit confirmation in chat stands in for the manual edit.
@@ -87,7 +87,7 @@ draft → ready → planned → implemented → documented → shipped
   - Architect requires `ready`
   - Builder requires `planned`
   - Archivist requires `implemented`
-  - Shipper requires `documented`
+- `archived` is the terminal per-ticket status. Deploying is a separate, ticket-agnostic step (`/deployer`) that doesn't read or change any ticket's status — see the Deployer entry above.
 
 ### A typical ticket
 
@@ -106,10 +106,16 @@ draft → ready → planned → implemented → documented → shipped
 
 /archivist XTG-001
 #   → updates architecture.md / domain-model.md / api-index.md / etc. and appends to history.md
-#   → status: documented
+#   → status: archived
+```
 
-/shipper XTG-001
-#   → deploys via FTP, status: shipped
+That's the end of this ticket's own lifecycle. Deploying isn't part of it — when you're ready to ship whatever's accumulated on disk (often spanning several archived tickets at once), run Deployer separately:
+
+```sh
+/deployer
+#   → first run for this target: interviews you about how deployment works,
+#     validates access where it safely can, writes .abzmyan/deploy/<target>.md
+#   → later runs: follows that playbook and deploys, no ticket ID involved
 ```
 
 Nothing here chains automatically — each command does its one job, writes its files, and stops. The one exception is the optional `/abzmyan-express` command:
@@ -118,8 +124,8 @@ Nothing here chains automatically — each command does its one job, writes its 
 /abzmyan-express "Fix the off-by-one in the pagination footer"
 #   → drafts requirements.md, status: draft
 #   → shows you the requirements, waits for your explicit confirmation
-#   → then runs Architect, Builder, Archivist back-to-back, status: documented
-#   → you review the diff, then run /shipper XTG-002 yourself if you want to deploy
+#   → then runs Architect, Builder, Archivist back-to-back, status: archived
+#   → you review the diff, then run /deployer yourself whenever you want to deploy
 ```
 
 ## Notes on scope
@@ -129,7 +135,6 @@ Deliberately not built (see the spec for the full rationale):
 - No automated testing / QA agent
 - No deployment rollback, backups, or versioning
 - No multi-user / concurrent-access handling
-- No deploy method other than FTP for now
 - No web UI or dashboard — this is CLI + markdown files + your AI coding agent's native commands only
 - No agent auto-chains into the next one by default; every stage waits for a human to trigger the next command — except the optional, explicitly-triggered `/abzmyan-express` one-shot variant, which still keeps one mandatory human checkpoint before it touches any code
 

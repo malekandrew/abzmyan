@@ -2,7 +2,7 @@ project_code: {{PROJECT_CODE}}
 mode: {{MODE}}
 created_at: {{CREATED_AT}}
 deploy:
-{{DEPLOY_BLOCK}}
+  targets: {}
 agents:
 {{AGENTS_BLOCK}}
 abzmyan_version: {{ABZMYAN_VERSION}}

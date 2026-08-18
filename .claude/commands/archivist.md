@@ -27,7 +27,7 @@ Before doing anything else:
    <2-4 sentence summary of what was built and why, plus any notable decisions made along the way>
    ```
 
-4. Update `.abzmyan/tickets/tickets.json`: read the full file, set this ticket's `status` to `documented`, refresh `updated_at`, and write the full file back.
+4. Update `.abzmyan/tickets/tickets.json`: read the full file, set this ticket's `status` to `archived`, refresh `updated_at`, and write the full file back.
 5. Append to the ticket's own `log.md`:
-   `[<ISO timestamp>] Archivist completed. Status: documented.`
+   `[<ISO timestamp>] Archivist completed. Status: archived.`
 6. Stop. Do not deploy. Do not invoke any other agent.

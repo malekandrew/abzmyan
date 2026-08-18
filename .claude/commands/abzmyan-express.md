@@ -6,7 +6,7 @@ Express only runs because a human explicitly asked for it — via `/abzmyan-expr
 
 Precondition: none — like Scribe, Express creates a brand-new ticket.
 
-Scope: Scribe → **one confirmation checkpoint** → Architect → Builder → Archivist, with no further stopping after that checkpoint. Everything from Architect onward changes real code and cannot be undone by Express itself, so the one checkpoint — confirming the requirements are actually right — is mandatory, not optional; it's what replaces the standalone flow's manual `draft` → `ready` gate (see the Scribe stage below). It stops after Archivist, at status `documented`, and never deploys — `/shipper <TICKET-ID>` is always a separate, explicit step afterward, even from Express.
+Scope: Scribe → **one confirmation checkpoint** → Architect → Builder → Archivist, with no further stopping after that checkpoint. Everything from Architect onward changes real code and cannot be undone by Express itself, so the one checkpoint — confirming the requirements are actually right — is mandatory, not optional; it's what replaces the standalone flow's manual `draft` → `ready` gate (see the Scribe stage below). It stops after Archivist, at status `archived`, and never deploys — `/deployer` is always a separate, explicit step afterward, even from Express.
 
 ## Bootstrap
 
@@ -50,13 +50,13 @@ Same as the standalone Builder agent: implement `plan.md`, verify the build, run
 
 ### 5. Archivist stage
 
-Same as the standalone Archivist agent: reconcile `.abzmyan/index/*` against what was actually built, append the `history.md` entry, set status to `documented`, log completion.
+Same as the standalone Archivist agent: reconcile `.abzmyan/index/*` against what was actually built, append the `history.md` entry, set status to `archived`, log completion.
 
 ## When you're done
 
 In your final chat response:
 - Summarize what was built, in the same terms the Builder's AC self-check would use.
-- Give the ticket ID and its final status (`documented`, or wherever it stopped if blocked).
-- Remind the user this ran without the usual per-stage review — they should skim `requirements.md`, `plan.md`, and the diff before treating it as done — and that `/shipper <TICKET-ID>` is a separate step if they want to deploy.
+- Give the ticket ID and its final status (`archived`, or wherever it stopped if blocked).
+- Remind the user this ran without the usual per-stage review — they should skim `requirements.md`, `plan.md`, and the diff before treating it as done — and that `/deployer` is a separate step if they want to deploy.
 
-Stop. Do not invoke `/shipper` or any other agent.
+Stop. Do not invoke `/deployer` or any other agent.

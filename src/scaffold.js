@@ -79,15 +79,43 @@ export async function copyCommandTemplates(projectRoot, agentIds) {
   return summary;
 }
 
+/**
+ * Deletes a single command's rendered file for each given agent — used when a
+ * command is removed entirely (as opposed to updated), so it doesn't linger
+ * as a stale, non-functional slash command. For agents whose commandsDir is
+ * per-command (only Codex CLI's skills/<name>/ layout today), also removes
+ * the now-empty per-command directory afterward. Returns a per-{agentId,
+ * file, removed} summary, mirroring copyCommandTemplates's shape.
+ */
+export async function removeCommandFiles(projectRoot, agentIds, name) {
+  const summary = [];
+
+  for (const agentId of agentIds) {
+    const agent = getAgent(agentId);
+    const destDir = agentCommandsDir(projectRoot, agent, name);
+    const destFile = agent.fileName(name);
+    const destPath = path.join(destDir, destFile);
+
+    const existed = await fs.pathExists(destPath);
+    if (existed) {
+      await fs.remove(destPath);
+    }
+
+    const perCommandDir = typeof agent.commandsDir === 'function';
+    if (perCommandDir && (await fs.pathExists(destDir)) && (await fs.readdir(destDir)).length === 0) {
+      await fs.remove(destDir);
+    }
+
+    summary.push({ agentId, name, file: destFile, removed: existed });
+  }
+
+  return summary;
+}
+
 /** Renders and writes .abzmyan/config.yml from config.yml.template. */
-export async function writeConfig(projectRoot, { projectCode, mode, createdAt, deployMethod, credentialsFile, agentIds, abzmyanVersion }) {
+export async function writeConfig(projectRoot, { projectCode, mode, createdAt, agentIds, abzmyanVersion }) {
   const templatePath = path.join(TEMPLATES_DIR, 'config.yml.template');
   let template = await fs.readFile(templatePath, 'utf8');
-
-  const deployBlock =
-    deployMethod === 'ftp'
-      ? `  method: ftp\n  credentials_file: ${credentialsFile}`
-      : `  method: unconfigured`;
 
   const agentsBlock = agentIds.map((id) => `  - ${id}`).join('\n');
 
@@ -95,7 +123,6 @@ export async function writeConfig(projectRoot, { projectCode, mode, createdAt, d
     .replace('{{PROJECT_CODE}}', projectCode)
     .replace('{{MODE}}', mode)
     .replace('{{CREATED_AT}}', createdAt)
-    .replace('{{DEPLOY_BLOCK}}', deployBlock)
     .replace('{{AGENTS_BLOCK}}', agentsBlock)
     .replace('{{ABZMYAN_VERSION}}', abzmyanVersion);
 
@@ -126,6 +153,59 @@ export async function writeAgentsToConfig(projectRoot, agentIds) {
   doc.set('agents', agentIds);
   await fs.writeFile(dest, doc.toString(), 'utf8');
   return dest;
+}
+
+/**
+ * One-time migration: converts the old single-block deploy.method /
+ * deploy.credentials_file config.yml shape into the new deploy.targets map.
+ * `method: unconfigured` becomes an empty targets map; `method: ftp` becomes
+ * a single target named "default", carrying its credentials_file forward.
+ * Returns true if a migration was applied, false if the config was already
+ * on the new shape (nothing to do).
+ */
+export async function migrateDeployConfig(projectRoot) {
+  const dest = configPath(projectRoot);
+  const raw = await fs.readFile(dest, 'utf8');
+  const doc = YAML.parseDocument(raw);
+
+  if (!doc.hasIn(['deploy', 'method'])) {
+    return false;
+  }
+
+  const method = doc.getIn(['deploy', 'method']);
+  const credentialsFile = doc.getIn(['deploy', 'credentials_file']);
+  const targets =
+    method === 'ftp' ? { default: { method: 'ftp', credentials_file: credentialsFile } } : {};
+
+  doc.set('deploy', { targets });
+  await fs.writeFile(dest, doc.toString(), 'utf8');
+  return true;
+}
+
+/**
+ * One-time migration: rewrites any ticket at a retired status (`documented`
+ * or `shipped`, from before the Shipper/Deployer agent swap) to `archived`.
+ * Returns the number of tickets migrated.
+ */
+export async function migrateTicketStatuses(projectRoot) {
+  const ticketsPath = path.join(ticketsDir(projectRoot), 'tickets.json');
+  const raw = await fs.readFile(ticketsPath, 'utf8');
+  const data = JSON.parse(raw);
+  const now = new Date().toISOString();
+
+  let migrated = 0;
+  for (const ticket of data.tickets ?? []) {
+    if (ticket.status === 'documented' || ticket.status === 'shipped') {
+      ticket.status = 'archived';
+      ticket.updated_at = now;
+      migrated += 1;
+    }
+  }
+
+  if (migrated > 0) {
+    await fs.writeFile(ticketsPath, `${JSON.stringify(data, null, 2)}\n`, 'utf8');
+  }
+  return migrated;
 }
 
 /** Writes .abzmyan/tickets/tickets.json as an empty registry. */

@@ -13,7 +13,7 @@ export const COMMAND_DESCRIPTIONS = {
   archivist: 'Updates the index docs and appends a history.md entry.',
   builder: 'Implements the plan, verifies the build, self-checks acceptance criteria.',
   scribe: 'Turns a free-text idea into a new ticket with requirements.md.',
-  shipper: 'Deploys the built app (FTP).',
+  deployer: 'Ticket-agnostic agent that deploys the current project state, guided by a self-written per-target playbook.',
 };
 
 function passthrough(name, content) {

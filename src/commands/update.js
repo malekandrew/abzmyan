@@ -4,9 +4,12 @@ import { AGENTS } from '../agents.js';
 import {
   abzmyanDir,
   copyCommandTemplates,
+  removeCommandFiles,
   writeMemoryFiles,
   readAgentsFromConfig,
   writeAgentsToConfig,
+  migrateDeployConfig,
+  migrateTicketStatuses,
 } from '../scaffold.js';
 
 function printSummary(summary) {
@@ -50,11 +53,34 @@ export async function updateCommand() {
   console.log('abzmyan command templates refreshed:');
   printSummary(summary);
 
+  const removedSummary = (await removeCommandFiles(projectRoot, currentAgentIds, 'shipper')).filter(
+    (entry) => entry.removed
+  );
+  if (removedSummary.length > 0) {
+    console.log('\nRetired command removed (Shipper was replaced by Deployer):');
+    for (const { agentId, file } of removedSummary) {
+      const label = AGENTS.find((a) => a.id === agentId)?.label ?? agentId;
+      console.log(`  - ${label}: ${file}`);
+    }
+  }
+
   const memorySummary = await writeMemoryFiles(projectRoot, currentAgentIds);
   console.log('\nabzmyan project-context block refreshed in agent memory files:');
   printMemorySummary(memorySummary);
 
-  console.log('\n.abzmyan/config.yml, .abzmyan/index/*, and .abzmyan/tickets/* were left untouched.');
+  const migratedTicketCount = await migrateTicketStatuses(projectRoot);
+  if (migratedTicketCount > 0) {
+    console.log(
+      `\n${migratedTicketCount} ticket(s) migrated: documented/shipped -> archived.`
+    );
+  }
+
+  const deployConfigMigrated = await migrateDeployConfig(projectRoot);
+  if (deployConfigMigrated) {
+    console.log('\n.abzmyan/config.yml deploy config migrated to the new multi-target shape.');
+  }
+
+  console.log('\n.abzmyan/index/* was left untouched.');
 
   const { agentIds: newAgentIds } = await prompts(
     {

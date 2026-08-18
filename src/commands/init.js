@@ -55,22 +55,6 @@ export async function initCommand() {
         initial: defaultMode === 'brownfield' ? 1 : 0,
       },
       {
-        type: 'select',
-        name: 'deployMethod',
-        message: 'Deploy method?',
-        choices: [
-          { title: 'FTP', value: 'ftp' },
-          { title: 'Not sure yet / configure later', value: 'unconfigured' },
-        ],
-        initial: 0,
-      },
-      {
-        type: (prev) => (prev === 'ftp' ? 'text' : null),
-        name: 'credentialsFile',
-        message: 'Path to your FTP credentials env file (relative to project root)?',
-        initial: '.env.deploy',
-      },
-      {
         type: 'multiselect',
         name: 'agentIds',
         message: 'Which AI coding agent(s) do you want to use abzmyan with?',
@@ -107,8 +91,6 @@ export async function initCommand() {
     projectCode: answers.projectCode,
     mode: answers.mode,
     createdAt,
-    deployMethod: answers.deployMethod,
-    credentialsFile: answers.credentialsFile,
     agentIds: answers.agentIds,
     abzmyanVersion: PACKAGE_VERSION,
   });
