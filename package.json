@@ -1,6 +1,6 @@
 {
   "name": "abzmyan",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "abzmyan (Agent Built, Zero Missteps, Yours to Approve, Next.) — a lightweight, index-driven spec-driven-development workflow for Claude Code, Cursor, GitHub Copilot, OpenAI Codex CLI, and Gemini CLI. Four manually-triggered agents (Scribe, Architect, Builder, Archivist) keep a maintained index of your project's architecture, domain model, and history as the single source of truth, plus a flexible Deployer agent for batched deploys.",
   "type": "module",
   "bin": {

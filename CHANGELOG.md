@@ -1,3 +1,10 @@
+# [0.5.0](https://github.com/malekandrew/abzmyan/compare/v0.4.0...v0.5.0) (2026-08-18)
+
+
+### Features
+
+* Replace Shipper with Deployer agent and rename ticket status to archived ([2ffe847](https://github.com/malekandrew/abzmyan/commit/2ffe847153c953c1dc695d29df34e12f4ff1f29b))
+
 # [0.4.0](https://github.com/malekandrew/abzmyan/compare/v0.3.0...v0.4.0) (2026-08-14)
 
 
